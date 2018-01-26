@@ -1,5 +1,7 @@
-package com.woowahan.webapp;
+package com.woowahan.webapp.controller;
 
+import com.woowahan.webapp.model.User;
+import com.woowahan.webapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
