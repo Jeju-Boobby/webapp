@@ -25,7 +25,7 @@ public class QuestionController {
     public String create(String writer, String title, String contents) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         Date date = new Date();
-        Question question = new Question(userRepository.findUserByUserId(writer), title, contents, dateFormat.format(date));
+        Question question = new Question(userRepository.findByUserId(writer), title, contents, dateFormat.format(date));
         questionRepository.save(question);
 
         return "redirect:/";
