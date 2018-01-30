@@ -1,9 +1,10 @@
 package com.woowahan.webapp.model;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity(name = "qna")
 public class Question {
@@ -12,21 +13,31 @@ public class Question {
     private long id;
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, foreignKey = @ForeignKey(name = "fk_question_writer"))
     private User writer;
+
+    @OneToMany(mappedBy = "question")
+    private List<Answer> answers;
 
     private String title;
     private String contents;
-    private String time;
+    private LocalDateTime createDate;
 
     public Question() {
     }
 
-    public Question(User writer, String title, String contents, String time) {
+    public Question(User writer, String title, String contents) {
         this.writer = writer;
         this.title = title;
         this.contents = contents;
-        this.time = time;
+        this.createDate = LocalDateTime.now();
+    }
+
+    public String getFormattedCreateDate() {
+        if (createDate == null) {
+            return "";
+        }
+        return createDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
 
     public long getId() {
@@ -45,6 +56,22 @@ public class Question {
         this.writer = writer;
     }
 
+    public List<Answer> getAnswers() {
+        return answers;
+    }
+
+    public void setAnswers(List<Answer> answers) {
+        this.answers = answers;
+    }
+
+    public void addAnswers(Answer answer) {
+        if (answers == null) {
+            answers = new ArrayList<>();
+        }
+
+        answers.add(answer);
+    }
+
     public String getTitle() {
         return title;
     }
@@ -61,11 +88,29 @@ public class Question {
         this.contents = contents;
     }
 
-    public String getTime() {
-        return time;
+    public LocalDateTime getCreateDate() {
+        return createDate;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public void setCreateDate(LocalDateTime createDate) {
+        this.createDate = createDate;
+    }
+
+    public int getAnswersSize() {
+        return answers.size();
+    }
+
+    public void update(String title, String contents) {
+        this.title = title;
+        this.contents = contents;
+        this.createDate = LocalDateTime.now();
+    }
+
+    public boolean isSameWriter(User sessionedUser) {
+        if (sessionedUser == null) {
+            return false;
+        }
+
+        return writer.equals(sessionedUser);
     }
 }

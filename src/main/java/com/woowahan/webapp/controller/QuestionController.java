@@ -1,76 +1,107 @@
 package com.woowahan.webapp.controller;
 
 import com.woowahan.webapp.model.Question;
-import com.woowahan.webapp.repository.QuestionRepository;
-import com.woowahan.webapp.repository.UserRepository;
+import com.woowahan.webapp.model.User;
+import com.woowahan.webapp.service.QuestionService;
+import com.woowahan.webapp.util.HttpSessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import javax.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/questions")
 public class QuestionController {
     @Autowired
-    private QuestionRepository questionRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @PostMapping("")
-    public String create(String writer, String title, String contents) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        Date date = new Date();
-        Question question = new Question(userRepository.findByUserId(writer), title, contents, dateFormat.format(date));
-        questionRepository.save(question);
-
-        return "redirect:/";
-    }
+    private QuestionService questionService;
 
     @GetMapping("")
     public String showList() {
         return "redirect:/";
     }
 
+    @PostMapping("")
+    public String create(String title, String contents, HttpSession session) {
+        if (!HttpSessionUtils.isLogOn(session)) {
+            return "users/login";
+        }
+
+        User writer = HttpSessionUtils.getUserFromSession(session);
+        questionService.save(writer, title, contents);
+
+        return "redirect:/";
+    }
+
     @GetMapping("/form")
-    public String form() {
+    public String form(HttpSession session) {
+        if (!HttpSessionUtils.isLogOn(session)) {
+            return "users/login";
+        }
         return "qna/form";
+    }
+
+    @GetMapping("/{id}/form")
+    public String editForm(@PathVariable long id, Model model, HttpSession session) {
+        try {
+            Question question = questionService.findOne(id);
+            hasPermission(session, question);
+            model.addAttribute("question", question);
+
+            return "qna/form";
+        } catch (IllegalAccessException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "/user/login";
+        }
     }
 
     @GetMapping("/{id}")
     public String show(@PathVariable long id, Model model) {
-        Question question = questionRepository.findOne(id);
+        Question question = questionService.findOne(id);
         model.addAttribute("question", question);
 
         return "qna/show";
     }
 
-    @GetMapping("/{id}/form")
-    public String editForm(@PathVariable long id, Model model) {
-        Question question = questionRepository.findOne(id);
-        model.addAttribute("question", question);
+    @PutMapping("/{id}")
+    public String edit(@PathVariable long id, String title, String contents, Model model, HttpSession session) {
+        try {
+            Question question = questionService.findOne(id);
+            hasPermission(session, question);
+            questionService.update(question, title, contents);
 
-        return "qna/form";
-
+            return String.format("redirect:/questions/%d", id);
+        } catch (IllegalAccessException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "/user/login";
+        }
     }
 
-    @PutMapping("/{id}")
-    public String edit(@PathVariable long id, String title, String contents) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        Date date = new Date();
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable long id, Model model, HttpSession session) {
+        try {
+            Question question = questionService.findOne(id);
+            hasPermission(session, question);
+            questionService.delete(question);
 
-        Question question = questionRepository.findOne(id);
+            return "redirect:/";
+        } catch (IllegalAccessException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "/user/login";
+        }
+    }
 
-        question.setTitle(title);
-        question.setContents(contents);
-        question.setTime(dateFormat.format(date));
+    private boolean hasPermission(HttpSession session, Question question) throws IllegalAccessException {
+        if (!HttpSessionUtils.isLogOn(session)) {
+            throw new IllegalAccessException("로그인이 필요합니다.");
+        }
 
-        questionRepository.save(question);
+        User sessionedUser = HttpSessionUtils.getUserFromSession(session);
+        if (question.isSameWriter(sessionedUser)) {
+            throw new IllegalAccessException("자신의 글만 수정 및 삭제할 수 있습니다.");
+        }
 
-        return "redirect:/";
+        return true;
     }
 }

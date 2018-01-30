@@ -2,6 +2,7 @@ package com.woowahan.webapp.controller;
 
 import com.woowahan.webapp.model.User;
 import com.woowahan.webapp.repository.UserRepository;
+import com.woowahan.webapp.util.HttpSessionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,14 +58,20 @@ public class UserController {
             return "redirect:/users/login";
         }
 
-        if (!user.getPassword().equals(password)) {
+        if (!user.matchPassword(password)) {
             return "redirect:/users/login";
         }
 
-        session.setAttribute("user", user);
+        session.setAttribute(HttpSessionUtils.USER_SESSION_KEY, user);
 
         return "redirect:/";
+    }
 
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.removeAttribute(HttpSessionUtils.USER_SESSION_KEY);
+
+        return "redirect:/";
     }
 
     @GetMapping("/register")
@@ -73,23 +80,39 @@ public class UserController {
     }
 
     @GetMapping("/{id}/form")
-    public String updateForm(@PathVariable long id, Model model) {
-        User user = userRepository.findOne(id);
-        model.addAttribute("user", user);
+    public String updateForm(@PathVariable long id, Model model, HttpSession session) throws IllegalAccessException {
+        if (HttpSessionUtils.isLogOn(session)) {
+            return "redirect:/login";
+        }
+
+        User sessionedUser = HttpSessionUtils.getUserFromSession(session);
+        if (!sessionedUser.matchId(id)) {
+            throw new IllegalAccessException("You just can update your own account.");
+        }
+
+        model.addAttribute("user", sessionedUser);
 
         return "user/form";
     }
 
     @PutMapping("/{id}")
-    public String update(@PathVariable long id, User user) {
-        User originUser = userRepository.findOne(id);
-        logger.debug("Origin User: {}", originUser);
-        logger.debug("New User: {}", user);
+    public String update(@PathVariable long id, User updatedUser, HttpSession session) throws IllegalAccessException {
+        if (HttpSessionUtils.isLogOn(session)) {
+            return "redirect:/login";
+        }
 
-        if (user.getPassword().equals(originUser.getPassword())) {
-            originUser.setName(user.getName());
-            originUser.setEmail(user.getEmail());
-            userRepository.save(originUser);
+        User sessionedUser = HttpSessionUtils.getUserFromSession(session);
+        if (!sessionedUser.matchId(id)) {
+            throw new IllegalAccessException("You just can update your own account.");
+        }
+
+        logger.debug("Origin User: {}", sessionedUser);
+        logger.debug("New User: {}", updatedUser);
+
+        if (sessionedUser.match(updatedUser)) {
+            sessionedUser.setName(updatedUser.getName());
+            sessionedUser.setEmail(updatedUser.getEmail());
+            userRepository.save(sessionedUser);
         }
 
         return "redirect:/users";
