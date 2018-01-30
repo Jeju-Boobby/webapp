@@ -1,6 +1,7 @@
 package com.woowahan.webapp.controller;
 
 import com.woowahan.webapp.model.Question;
+import com.woowahan.webapp.model.Result;
 import com.woowahan.webapp.model.User;
 import com.woowahan.webapp.service.QuestionService;
 import com.woowahan.webapp.util.HttpSessionUtils;
@@ -44,16 +45,16 @@ public class QuestionController {
 
     @GetMapping("/{id}/form")
     public String editForm(@PathVariable long id, Model model, HttpSession session) {
-        try {
-            Question question = questionService.findOne(id);
-            hasPermission(session, question);
-            model.addAttribute("question", question);
+        Question question = questionService.findOne(id);
+        Result result = valid(session, question);
 
-            return "qna/form";
-        } catch (IllegalAccessException e) {
-            model.addAttribute("errorMessage", e.getMessage());
+        if (!result.isValid()) {
+            model.addAttribute("errorMessage", result.getErrorMessage());
             return "/user/login";
         }
+
+        model.addAttribute("question", question);
+        return "qna/form";
     }
 
     @GetMapping("/{id}")
@@ -66,42 +67,42 @@ public class QuestionController {
 
     @PutMapping("/{id}")
     public String edit(@PathVariable long id, String title, String contents, Model model, HttpSession session) {
-        try {
-            Question question = questionService.findOne(id);
-            hasPermission(session, question);
-            questionService.update(question, title, contents);
+        Question question = questionService.findOne(id);
+        Result result = valid(session, question);
 
-            return String.format("redirect:/questions/%d", id);
-        } catch (IllegalAccessException e) {
-            model.addAttribute("errorMessage", e.getMessage());
+        if (!result.isValid()) {
+            model.addAttribute("errorMessage", result.getErrorMessage());
             return "/user/login";
         }
+
+        questionService.update(question, title, contents);
+        return String.format("redirect:/questions/%d", id);
     }
 
     @DeleteMapping("/{id}")
     public String delete(@PathVariable long id, Model model, HttpSession session) {
-        try {
-            Question question = questionService.findOne(id);
-            hasPermission(session, question);
-            questionService.delete(question);
+        Question question = questionService.findOne(id);
+        Result result = valid(session, question);
 
-            return "redirect:/";
-        } catch (IllegalAccessException e) {
-            model.addAttribute("errorMessage", e.getMessage());
+        if (!result.isValid()) {
+            model.addAttribute("errorMessage", result.getErrorMessage());
             return "/user/login";
         }
+        
+        questionService.delete(question);
+        return "redirect:/";
     }
 
-    private boolean hasPermission(HttpSession session, Question question) throws IllegalAccessException {
+    private Result valid(HttpSession session, Question question) {
         if (!HttpSessionUtils.isLogOn(session)) {
-            throw new IllegalAccessException("로그인이 필요합니다.");
+            return Result.fail("로그인이 필요합니다.");
         }
 
         User sessionedUser = HttpSessionUtils.getUserFromSession(session);
         if (question.isSameWriter(sessionedUser)) {
-            throw new IllegalAccessException("자신의 글만 수정 및 삭제할 수 있습니다.");
+            return Result.fail("자신의 글만 수정 및 삭제할 수 있습니다.");
         }
 
-        return true;
+        return Result.ok();
     }
 }
