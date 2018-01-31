@@ -81,8 +81,8 @@ public class UserController {
 
     @GetMapping("/{id}/form")
     public String updateForm(@PathVariable long id, Model model, HttpSession session) throws IllegalAccessException {
-        if (HttpSessionUtils.isLogOn(session)) {
-            return "redirect:/login";
+        if (!HttpSessionUtils.isLogOn(session)) {
+            return "redirect:/users/login";
         }
 
         User sessionedUser = HttpSessionUtils.getUserFromSession(session);
@@ -97,8 +97,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     public String update(@PathVariable long id, User updatedUser, HttpSession session) throws IllegalAccessException {
-        if (HttpSessionUtils.isLogOn(session)) {
-            return "redirect:/login";
+        if (!HttpSessionUtils.isLogOn(session)) {
+            return "redirect:/users/login";
         }
 
         User sessionedUser = HttpSessionUtils.getUserFromSession(session);

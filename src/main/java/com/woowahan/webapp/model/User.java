@@ -1,5 +1,8 @@
 package com.woowahan.webapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -7,15 +10,15 @@ import javax.persistence.Id;
 import java.util.Objects;
 
 @Entity
-public class User {
-    @Id
-    @GeneratedValue
-    private long id;
-
+public class User extends AbstractEntity {
     @Column(nullable = false, length = 15, unique = true)
+    @JsonProperty
     private String userId;
+    @JsonProperty
     private String name;
+    @JsonIgnore
     private String password;
+    @JsonProperty
     private String email;
 
     public User() {
@@ -34,7 +37,7 @@ public class User {
             return false;
         }
 
-        return this.id == id;
+        return id.equals(getId());
     }
 
     public boolean matchPassword(String newPassword) {
@@ -53,10 +56,6 @@ public class User {
         return userId.equals(newUser.userId) && password.equals(newUser.password);
     }
 
-    public long getId() {
-        return id;
-    }
-
     public String getUserId() {
         return userId;
     }
@@ -67,10 +66,6 @@ public class User {
 
     public String getEmail() {
         return email;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public void setUserId(String userId) {
@@ -92,28 +87,11 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "userId='" + userId + '\'' +
+                super.toString() +
+                ", userId='" + userId + '\'' +
                 ", name='" + name + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return id == user.id &&
-                Objects.equals(userId, user.userId) &&
-                Objects.equals(name, user.name) &&
-                Objects.equals(password, user.password) &&
-                Objects.equals(email, user.email);
-    }
-
-    @Override
-    public int hashCode() {
-
-        return Objects.hash(id, userId, name, password, email);
     }
 }

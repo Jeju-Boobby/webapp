@@ -1,25 +1,26 @@
 package com.woowahan.webapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
-public class Answer {
-    @Id
-    @GeneratedValue
-    private Long id;
-
+public class Answer extends AbstractEntity{
     @ManyToOne
     @JoinColumn(nullable = false, foreignKey = @ForeignKey(name = "fk_answer_question"))
+    @JsonProperty
     private Question question;
 
     @ManyToOne
     @JoinColumn(nullable = false, foreignKey = @ForeignKey(name = "fk_answer_writer"))
+    @JsonProperty
     private User writer;
 
-    private LocalDateTime createDate;
-
     @Lob
+    @JsonProperty
     private String contents;
 
     public Answer() {
@@ -29,15 +30,6 @@ public class Answer {
         this.question = question;
         this.writer = writer;
         this.contents = contents;
-        createDate = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Question getQuestion() {
@@ -54,14 +46,6 @@ public class Answer {
 
     public void setWriter(User writer) {
         this.writer = writer;
-    }
-
-    public LocalDateTime getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
     }
 
     public String getContents() {
@@ -82,6 +66,15 @@ public class Answer {
 
     public void update(String contents) {
         this.contents = contents;
-        this.createDate = LocalDateTime.now();
+    }
+
+    @Override
+    public String toString() {
+        return "Answer{" +
+                super.toString() +
+                ", question=" + question +
+                ", writer=" + writer +
+                ", contents='" + contents + '\'' +
+                '}';
     }
 }

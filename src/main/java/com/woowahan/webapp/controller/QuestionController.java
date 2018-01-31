@@ -88,7 +88,7 @@ public class QuestionController {
             model.addAttribute("errorMessage", result.getErrorMessage());
             return "/user/login";
         }
-        
+
         questionService.delete(question);
         return "redirect:/";
     }
@@ -99,7 +99,7 @@ public class QuestionController {
         }
 
         User sessionedUser = HttpSessionUtils.getUserFromSession(session);
-        if (question.isSameWriter(sessionedUser)) {
+        if (!question.isSameWriter(sessionedUser)) {
             return Result.fail("자신의 글만 수정 및 삭제할 수 있습니다.");
         }
 

@@ -1,5 +1,9 @@
 package com.woowahan.webapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.core.annotation.Order;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,21 +11,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity(name = "qna")
-public class Question {
-    @Id
-    @GeneratedValue
-    private long id;
-
+public class Question extends AbstractEntity{
     @ManyToOne
     @JoinColumn(nullable = false, foreignKey = @ForeignKey(name = "fk_question_writer"))
+    @JsonProperty
     private User writer;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "question")
+    @OrderBy("id DESC")
     private List<Answer> answers;
 
+    @JsonProperty
     private String title;
+    @JsonProperty
     private String contents;
-    private LocalDateTime createDate;
 
     public Question() {
     }
@@ -30,22 +34,6 @@ public class Question {
         this.writer = writer;
         this.title = title;
         this.contents = contents;
-        this.createDate = LocalDateTime.now();
-    }
-
-    public String getFormattedCreateDate() {
-        if (createDate == null) {
-            return "";
-        }
-        return createDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public User getWriter() {
@@ -88,14 +76,6 @@ public class Question {
         this.contents = contents;
     }
 
-    public LocalDateTime getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
-    }
-
     public int getAnswersSize() {
         return answers.size();
     }
@@ -103,7 +83,6 @@ public class Question {
     public void update(String title, String contents) {
         this.title = title;
         this.contents = contents;
-        this.createDate = LocalDateTime.now();
     }
 
     public boolean isSameWriter(User sessionedUser) {
@@ -112,5 +91,16 @@ public class Question {
         }
 
         return writer.equals(sessionedUser);
+    }
+
+    @Override
+    public String toString() {
+        return "Question{" +
+                super.toString() +
+                ", writer=" + writer +
+                ", answers=" + answers +
+                ", title='" + title + '\'' +
+                ", contents='" + contents + '\'' +
+                '}';
     }
 }

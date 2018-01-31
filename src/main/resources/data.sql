@@ -1,8 +1,9 @@
-INSERT INTO user(user_id, password, name, email) VALUES ('boobby', '1234', 'BEH', 'boo@woowahan.com');
-INSERT INTO user(user_id, password, name, email) VALUES ('ikkiluk', '1234', 'LSE', 'lse@woowahan.com');
-INSERT INTO user(user_id, password, name, email) VALUES ('yejun', '1234', 'PYJ', 'pyj@woowahan.com');
-INSERT INTO user(user_id, password, name, email) VALUES ('sehwan', '1234', 'KSH', 'ksh@woowahan.com');
-INSERT INTO user(user_id, password, name, email) VALUES ('hanna', '1234', 'JHN', 'jhn@woowahan.com');
+INSERT INTO user(user_id, password, name, email, create_date) VALUES
+('boobby', '1234', 'BEH', 'boo@woowahan.com', CURRENT_TIMESTAMP),
+('ikkiluk', '1234', 'LSE', 'lse@woowahan.com', CURRENT_TIMESTAMP),
+('yejun', '1234', 'PYJ', 'pyj@woowahan.com', CURRENT_TIMESTAMP),
+('sehwan', '1234', 'KSH', 'ksh@woowahan.com', CURRENT_TIMESTAMP),
+('hanna', '1234', 'JHN', 'jhn@woowahan.com', CURRENT_TIMESTAMP);
 
 INSERT INTO qna(writer_id, title, contents, create_date) VALUES
 (1, '이것이 스프링인가요?', '너무 어렵네요', '2017-12-22 13:12:00'),
